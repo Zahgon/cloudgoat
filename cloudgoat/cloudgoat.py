@@ -7,45 +7,6 @@ import subprocess
 import sys
 
 
-def command_completer(prefix, parsed_args, **kwargs):
-    BASE_COMMANDS = ["config", "create", "destroy", "list", "help"]
-
-    if not parsed_args.command:
-        return BASE_COMMANDS
-
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    scenarios_dir = os.path.join(base_dir, "scenarios")
-
-    scenario_dir_names = list()
-
-    for filesystem_object in os.scandir(scenarios_dir):
-        if filesystem_object.is_dir():
-            scenario_dir_names.append(os.path.basename(filesystem_object.path))
-
-    if len(parsed_args.command) == 1:
-        if parsed_args.command[0] == "config":
-            return ["argcomplete", "profile", "whitelist"]
-
-        elif parsed_args.command[0] == "create":
-            return scenario_dir_names
-
-        elif parsed_args.command[0] == "destroy":
-            return scenario_dir_names + ["all"]
-
-        elif parsed_args.command[0] == "list":
-            return scenario_dir_names + ["all", "deployed", "undeployed"]
-
-        elif parsed_args.command[0] == "help":
-            return scenario_dir_names + BASE_COMMANDS
-
-    elif len(parsed_args.command) == 2:
-        if parsed_args.command[0] == "config" and parsed_args.command[1] == "whitelist":
-            return ["--auto"]
-
-        elif parsed_args.command[0] in ("create", "destroy"):
-            return ["--profile"]
-
-    return [None]
 
 
 def parse_args():

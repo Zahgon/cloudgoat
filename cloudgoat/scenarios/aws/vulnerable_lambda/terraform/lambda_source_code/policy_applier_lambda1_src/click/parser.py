@@ -190,9 +190,6 @@ class Option:
         self.const = const
         self.obj = obj
 
-    @property
-    def takes_value(self) -> bool:
-        return self.action in ("store", "append")
 
     def process(self, value: str, state: "ParsingState") -> None:
         if self.action == "store":

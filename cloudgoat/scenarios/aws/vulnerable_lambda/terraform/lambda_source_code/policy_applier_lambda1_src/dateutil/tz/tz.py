@@ -1028,9 +1028,6 @@ class tzrange(tzrangebase):
                 self._start_delta == other._start_delta and
                 self._end_delta == other._end_delta)
 
-    @property
-    def _dst_base_offset(self):
-        return self._dst_base_offset_
 
 
 @six.add_metaclass(_TzStrFactory)
@@ -1576,16 +1573,7 @@ def __get_gettz():
 
             return rv
 
-        def set_cache_size(self, size):
-            with self._cache_lock:
-                self.__strong_cache_size = size
-                while len(self.__strong_cache) > size:
-                    self.__strong_cache.popitem(last=False)
 
-        def cache_clear(self):
-            with self._cache_lock:
-                self.__instances = weakref.WeakValueDictionary()
-                self.__strong_cache.clear()
 
         @staticmethod
         def nocache(name=None):
@@ -1699,19 +1687,7 @@ def datetime_exists(dt, tz=None):
 
     .. versionadded:: 2.7.0
     """
-    if tz is None:
-        if dt.tzinfo is None:
-            raise ValueError('Datetime is naive and no time zone provided.')
-        tz = dt.tzinfo
-
-    dt = dt.replace(tzinfo=None)
-
-    # This is essentially a test of whether or not the datetime can survive
-    # a round trip to UTC.
-    dt_rt = dt.replace(tzinfo=tz).astimezone(UTC).astimezone(tz)
-    dt_rt = dt_rt.replace(tzinfo=None)
-
-    return dt == dt_rt
+    pass
 
 
 def datetime_ambiguous(dt, tz=None):
@@ -1734,30 +1710,7 @@ def datetime_ambiguous(dt, tz=None):
 
     .. versionadded:: 2.6.0
     """
-    if tz is None:
-        if dt.tzinfo is None:
-            raise ValueError('Datetime is naive and no time zone provided.')
-
-        tz = dt.tzinfo
-
-    # If a time zone defines its own "is_ambiguous" function, we'll use that.
-    is_ambiguous_fn = getattr(tz, 'is_ambiguous', None)
-    if is_ambiguous_fn is not None:
-        try:
-            return tz.is_ambiguous(dt)
-        except Exception:
-            pass
-
-    # If it doesn't come out and tell us it's ambiguous, we'll just check if
-    # the fold attribute has any effect on this particular date and time.
-    dt = dt.replace(tzinfo=tz)
-    wall_0 = enfold(dt, fold=0)
-    wall_1 = enfold(dt, fold=1)
-
-    same_offset = wall_0.utcoffset() == wall_1.utcoffset()
-    same_dst = wall_0.dst() == wall_1.dst()
-
-    return not (same_offset and same_dst)
+    pass
 
 
 def resolve_imaginary(dt):
@@ -1796,14 +1749,7 @@ def resolve_imaginary(dt):
 
     .. versionadded:: 2.7.0
     """
-    if dt.tzinfo is not None and not datetime_exists(dt):
-
-        curr_offset = (dt + datetime.timedelta(hours=24)).utcoffset()
-        old_offset = (dt - datetime.timedelta(hours=24)).utcoffset()
-
-        dt += curr_offset - old_offset
-
-    return dt
+    pass
 
 
 def _datetime_to_timestamp(dt):

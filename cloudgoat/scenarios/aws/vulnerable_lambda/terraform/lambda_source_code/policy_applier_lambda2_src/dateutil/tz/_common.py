@@ -17,13 +17,6 @@ def tzname_in_python2(namefunc):
     to unicode strings
     """
     if PY2:
-        @wraps(namefunc)
-        def adjust_encoding(*args, **kwargs):
-            name = namefunc(*args, **kwargs)
-            if name is not None:
-                name = name.encode()
-
-            return name
 
         return adjust_encoding
     else:
@@ -95,9 +88,6 @@ else:
 
             return dt_class(**kwargs)
 
-        @property
-        def fold(self):
-            return 1
 
     def enfold(dt, fold=1):
         """
@@ -404,9 +394,6 @@ class tzrangebase(_tzinfo):
 
         return isdst
 
-    @property
-    def _dst_base_offset(self):
-        return self._dst_offset - self._std_offset
 
     __hash__ = None
 

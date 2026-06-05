@@ -60,10 +60,7 @@ class ParamType:
 
         .. versionadded:: 8.0
         """
-        # The class name without the "ParamType" suffix.
-        param_type = type(self).__name__.partition("ParamType")[0]
-        param_type = param_type.partition("ParameterType")[0]
-        return {"param_type": param_type, "name": self.name}
+        pass
 
     def __call__(
         self,
@@ -158,10 +155,6 @@ class FuncParamType(ParamType):
         self.name = func.__name__
         self.func = func
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict()
-        info_dict["func"] = self.func
-        return info_dict
 
     def convert(
         self, value: t.Any, param: t.Optional["Parameter"], ctx: t.Optional["Context"]
@@ -238,11 +231,6 @@ class Choice(ParamType):
         self.choices = choices
         self.case_sensitive = case_sensitive
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict()
-        info_dict["choices"] = self.choices
-        info_dict["case_sensitive"] = self.case_sensitive
-        return info_dict
 
     def get_metavar(self, param: "Parameter") -> str:
         choices_str = "|".join(self.choices)
@@ -348,10 +336,6 @@ class DateTime(ParamType):
     def __init__(self, formats: t.Optional[t.Sequence[str]] = None):
         self.formats = formats or ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict()
-        info_dict["formats"] = self.formats
-        return info_dict
 
     def get_metavar(self, param: "Parameter") -> str:
         return f"[{'|'.join(self.formats)}]"
@@ -422,16 +406,6 @@ class _NumberRangeBase(_NumberParamTypeBase):
         self.max_open = max_open
         self.clamp = clamp
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict()
-        info_dict.update(
-            min=self.min,
-            max=self.max,
-            min_open=self.min_open,
-            max_open=self.max_open,
-            clamp=self.clamp,
-        )
-        return info_dict
 
     def convert(
         self, value: t.Any, param: t.Optional["Parameter"], ctx: t.Optional["Context"]
@@ -671,10 +645,6 @@ class File(ParamType):
         self.lazy = lazy
         self.atomic = atomic
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict()
-        info_dict.update(mode=self.mode, encoding=self.encoding)
-        return info_dict
 
     def resolve_lazy_flag(self, value: t.Any) -> bool:
         if self.lazy is not None:
@@ -804,17 +774,6 @@ class Path(ParamType):
         else:
             self.name = _("path")
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict()
-        info_dict.update(
-            exists=self.exists,
-            file_okay=self.file_okay,
-            dir_okay=self.dir_okay,
-            writable=self.writable,
-            readable=self.readable,
-            allow_dash=self.allow_dash,
-        )
-        return info_dict
 
     def coerce_path_result(self, rv: t.Any) -> t.Any:
         if self.type is not None and not isinstance(rv, self.type):
@@ -926,18 +885,8 @@ class Tuple(CompositeParamType):
     def __init__(self, types: t.Sequence[t.Union[t.Type, ParamType]]) -> None:
         self.types = [convert_type(ty) for ty in types]
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict()
-        info_dict["types"] = [t.to_info_dict() for t in self.types]
-        return info_dict
 
-    @property
-    def name(self) -> str:  # type: ignore
-        return f"<{' '.join(ty.name for ty in self.types)}>"
 
-    @property
-    def arity(self) -> int:  # type: ignore
-        return len(self.types)
 
     def convert(
         self, value: t.Any, param: t.Optional["Parameter"], ctx: t.Optional["Context"]

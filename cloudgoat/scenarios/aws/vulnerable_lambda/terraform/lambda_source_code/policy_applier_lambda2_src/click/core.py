@@ -132,13 +132,6 @@ def iter_params_for_processing(
     a list in the correct order as they should be processed.
     """
 
-    def sort_key(item: "Parameter") -> t.Tuple[bool, float]:
-        try:
-            idx: float = invocation_order.index(item)
-        except ValueError:
-            idx = float("inf")
-
-        return not item.is_eager, idx
 
     return sorted(declaration_order, key=sort_key)
 
@@ -446,14 +439,7 @@ class Context:
 
         .. versionadded:: 8.0
         """
-        return {
-            "command": self.command.to_info_dict(self),
-            "info_name": self.info_name,
-            "allow_extra_args": self.allow_extra_args,
-            "allow_interspersed_args": self.allow_interspersed_args,
-            "ignore_unknown_options": self.ignore_unknown_options,
-            "auto_envvar_prefix": self.auto_envvar_prefix,
-        }
+        pass
 
     def __enter__(self) -> "Context":
         self._depth += 1
@@ -530,7 +516,7 @@ class Context:
 
         .. versionadded:: 5.0
         """
-        return self._meta
+        pass
 
     def make_formatter(self) -> HelpFormatter:
         """Creates the :class:`~click.HelpFormatter` for the help and
@@ -573,7 +559,7 @@ class Context:
 
         .. versionadded:: 8.0
         """
-        return self._exit_stack.enter_context(context_manager)
+        pass
 
     def call_on_close(self, f: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
         """Register a function to be called when the context tears down.
@@ -602,18 +588,7 @@ class Context:
         information on the help page.  It's automatically created by
         combining the info names of the chain of contexts to the root.
         """
-        rv = ""
-        if self.info_name is not None:
-            rv = self.info_name
-        if self.parent is not None:
-            parent_command_path = [self.parent.command_path]
-
-            if isinstance(self.parent.command, Command):
-                for param in self.parent.command.get_params(self):
-                    parent_command_path.extend(param.get_usage_pieces(self))
-
-            rv = f"{' '.join(parent_command_path)} {rv}"
-        return rv.lstrip()
+        pass
 
     def find_root(self) -> "Context":
         """Finds the outermost context."""
@@ -773,15 +748,7 @@ class Context:
             All ``kwargs`` are tracked in :attr:`params` so they will be
             passed if ``forward`` is called at multiple levels.
         """
-        # Can only forward to other commands, not direct callbacks.
-        if not isinstance(__cmd, Command):
-            raise TypeError("Callback is not a command.")
-
-        for param in __self.params:
-            if param not in kwargs:
-                kwargs[param] = __self.params[param]
-
-        return __self.invoke(__cmd, *args, **kwargs)
+        pass
 
     def set_parameter_source(self, name: str, source: ParameterSource) -> None:
         """Set the source of a parameter. This indicates the location
@@ -873,7 +840,7 @@ class BaseCommand:
 
         .. versionadded:: 8.0
         """
-        return {"name": self.name}
+        pass
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.name}>"
@@ -1210,17 +1177,6 @@ class Command(BaseCommand):
         self.hidden = hidden
         self.deprecated = deprecated
 
-    def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict(ctx)
-        info_dict.update(
-            params=[param.to_info_dict() for param in self.get_params(ctx)],
-            help=self.help,
-            epilog=self.epilog,
-            short_help=self.short_help,
-            hidden=self.hidden,
-            deprecated=self.deprecated,
-        )
-        return info_dict
 
     def get_usage(self, ctx: Context) -> str:
         """Formats the usage line into a string and returns it.
@@ -1274,10 +1230,6 @@ class Command(BaseCommand):
         if not help_options or not self.add_help_option:
             return None
 
-        def show_help(ctx: Context, param: "Parameter", value: str) -> None:
-            if value and not ctx.resilient_parsing:
-                echo(ctx.get_help(), color=ctx.color)
-                ctx.exit()
 
         return Option(
             help_options,
@@ -1505,23 +1457,6 @@ class MultiCommand(Command):
                         " optional arguments."
                     )
 
-    def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict(ctx)
-        commands = {}
-
-        for name in self.list_commands(ctx):
-            command = self.get_command(ctx, name)
-
-            if command is None:
-                continue
-
-            sub_ctx = ctx._make_sub_context(command)
-
-            with sub_ctx.scope(cleanup=False):
-                commands[name] = command.to_info_dict(sub_ctx)
-
-        info_dict.update(commands=commands, chain=self.chain)
-        return info_dict
 
     def collect_usage_pieces(self, ctx: Context) -> t.List[str]:
         rv = super().collect_usage_pieces(ctx)
@@ -1560,33 +1495,8 @@ class MultiCommand(Command):
 
         .. versionadded:: 3.0
         """
+        pass
 
-        def decorator(f: F) -> F:
-            old_callback = self._result_callback
-
-            if old_callback is None or replace:
-                self._result_callback = f
-                return f
-
-            def function(__value, *args, **kwargs):  # type: ignore
-                inner = old_callback(__value, *args, **kwargs)  # type: ignore
-                return f(inner, *args, **kwargs)
-
-            self._result_callback = rv = update_wrapper(t.cast(F, function), f)
-            return rv
-
-        return decorator
-
-    def resultcallback(self, replace: bool = False) -> t.Callable[[F], F]:
-        import warnings
-
-        warnings.warn(
-            "'resultcallback' has been renamed to 'result_callback'."
-            " The old name will be removed in Click 8.1.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.result_callback(replace=replace)
 
     def format_commands(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Extra format methods for multi methods that adds all the commands
@@ -1901,7 +1811,7 @@ class CommandCollection(MultiCommand):
 
     def add_source(self, multi_cmd: MultiCommand) -> None:
         """Adds a new multi command to the chain dispatcher."""
-        self.sources.append(multi_cmd)
+        pass
 
     def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
         for source in self.sources:
@@ -2139,18 +2049,7 @@ class Parameter:
 
         .. versionadded:: 8.0
         """
-        return {
-            "name": self.name,
-            "param_type_name": self.param_type_name,
-            "opts": self.opts,
-            "secondary_opts": self.secondary_opts,
-            "type": self.type.to_info_dict(),
-            "required": self.required,
-            "nargs": self.nargs,
-            "multiple": self.multiple,
-            "default": self.default,
-            "envvar": self.envvar,
-        }
+        pass
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.name}>"
@@ -2165,7 +2064,7 @@ class Parameter:
         """Returns the human readable name of this parameter.  This is the
         same as the name for options, but the metavar for arguments.
         """
-        return self.name  # type: ignore
+        pass
 
     def make_metavar(self) -> str:
         if self.metavar is not None:
@@ -2567,17 +2466,6 @@ class Option(Parameter):
                 if self.is_flag:
                     raise TypeError("'count' is not valid with 'is_flag'.")
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict()
-        info_dict.update(
-            help=self.help,
-            prompt=self.prompt,
-            is_flag=self.is_flag,
-            flag_value=self.flag_value,
-            count=self.count,
-            hidden=self.hidden,
-        )
-        return info_dict
 
     def _parse_decls(
         self, decls: t.Sequence[str], expose_value: bool
@@ -2912,11 +2800,6 @@ class Argument(Parameter):
             if self.default is not None and self.nargs == -1:
                 raise TypeError("'default' is not supported for nargs=-1.")
 
-    @property
-    def human_readable_name(self) -> str:
-        if self.metavar is not None:
-            return self.metavar
-        return self.name.upper()  # type: ignore
 
     def make_metavar(self) -> str:
         if self.metavar is not None:

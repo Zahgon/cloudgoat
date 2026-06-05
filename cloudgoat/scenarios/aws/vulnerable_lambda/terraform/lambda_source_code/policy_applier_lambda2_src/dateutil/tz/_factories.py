@@ -19,7 +19,7 @@ class _TzSingleton(type):
 class _TzFactory(type):
     def instance(cls, *args, **kwargs):
         """Alternate constructor that returns a fresh instance"""
-        return type.__call__(cls, *args, **kwargs)
+        pass
 
 
 class _TzOffsetFactory(_TzFactory):

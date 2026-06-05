@@ -7,27 +7,11 @@ from functools import wraps
 
 def register_functions(conn):
     "Registers these custom functions against an SQLite connection"
-    conn.create_function("rank_score", 1, rank_score)
-    conn.create_function("decode_matchinfo", 1, decode_matchinfo_str)
-    conn.create_function("annotate_matchinfo", 2, annotate_matchinfo)
-    conn.create_function("rank_bm25", 1, rank_bm25)
+    pass
 
 
-def wrap_sqlite_function_in_error_logger(fn):
-    # Because SQLite swallows exceptions inside custom functions
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except Exception:
-            traceback.print_exc()
-            raise
-
-    return wrapper
 
 
-def decode_matchinfo_str(buf):
-    return str(list(decode_matchinfo(buf)))
 
 
 def decode_matchinfo(buf):
@@ -39,9 +23,6 @@ def _error(m):
     return {"error": m}
 
 
-@wrap_sqlite_function_in_error_logger
-def annotate_matchinfo(buf, format_string):
-    return json.dumps(_annotate_matchinfo(buf, format_string), indent=2)
 
 
 def _annotate_matchinfo(buf, format_string):
@@ -196,25 +177,6 @@ def _annotate_matchinfo(buf, format_string):
     return results
 
 
-@wrap_sqlite_function_in_error_logger
-def rank_score(raw_matchinfo):
-    # Score using matchinfo called w/default args 'pcx' - based on example rank
-    # function http://sqlite.org/fts3.html#appendix_a
-    # The overall relevancy returned is the sum of the relevancies of each
-    # column value in the FTS table. The relevancy of a column value is the
-    # sum of the following for each reportable phrase in the FTS query:
-    #   (<hit count > / <global hit count>)
-    if not raw_matchinfo:
-        return None
-    matchinfo = _annotate_matchinfo(raw_matchinfo, "pcx")
-    score = 0.0
-    x_phrase_column_details = matchinfo["x"]["value"]
-    for details in x_phrase_column_details:
-        hits_this_column_this_row = details["hits_this_column_this_row"]
-        hits_this_column_all_rows = details["hits_this_column_all_rows"]
-        if hits_this_column_this_row > 0:
-            score += float(hits_this_column_this_row) / hits_this_column_all_rows
-    return -score
 
 
 @wrap_sqlite_function_in_error_logger

@@ -30,11 +30,6 @@ def _posixify(name: str) -> str:
 def safecall(func: F) -> F:
     """Wraps a function so that it swallows exceptions."""
 
-    def wrapper(*args, **kwargs):  # type: ignore
-        try:
-            return func(*args, **kwargs)
-        except Exception:
-            pass
 
     return update_wrapper(t.cast(F, wrapper), func)
 
@@ -145,18 +140,7 @@ class LazyFile:
         a :exc:`FileError`.  Not handling this error will produce an error
         that Click shows.
         """
-        if self._f is not None:
-            return self._f
-        try:
-            rv, self.should_close = open_stream(
-                self.name, self.mode, self.encoding, self.errors, atomic=self.atomic
-            )
-        except OSError as e:  # noqa: E402
-            from .exceptions import FileError
-
-            raise FileError(self.name, hint=e.strerror)
-        self._f = rv
-        return rv
+        pass
 
     def close(self) -> None:
         """Closes the underlying file, no matter what."""
@@ -167,8 +151,7 @@ class LazyFile:
         """This function only closes the file if it was opened by the lazy
         file wrapper.  For instance this will never close stdin.
         """
-        if self.should_close:
-            self.close()
+        pass
 
     def __enter__(self) -> "LazyFile":
         return self

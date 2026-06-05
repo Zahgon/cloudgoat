@@ -19,24 +19,6 @@ import six
 __all__ = ["isoparse", "isoparser"]
 
 
-def _takes_ascii(f):
-    @wraps(f)
-    def func(self, str_in, *args, **kwargs):
-        # If it's a stream, read the whole thing
-        str_in = getattr(str_in, 'read', lambda: str_in)()
-
-        # If it's unicode, turn it into bytes, since ISO-8601 only covers ASCII
-        if isinstance(str_in, six.text_type):
-            # ASCII is the same in UTF-8
-            try:
-                str_in = str_in.encode('ascii')
-            except UnicodeEncodeError as e:
-                msg = 'ISO-8601 strings should contain only ASCII characters'
-                six.raise_from(ValueError(msg), e)
-
-        return f(self, str_in, *args, **kwargs)
-
-    return func
 
 
 class isoparser(object):
@@ -156,11 +138,7 @@ class isoparser(object):
         :return:
             Returns a :class:`datetime.date` object
         """
-        components, pos = self._parse_isodate(datestr)
-        if pos < len(datestr):
-            raise ValueError('String contains unknown ISO ' +
-                             'components: {!r}'.format(datestr.decode('ascii')))
-        return date(*components)
+        pass
 
     @_takes_ascii
     def parse_isotime(self, timestr):
@@ -173,10 +151,7 @@ class isoparser(object):
         :return:
             Returns a :class:`datetime.time` object
         """
-        components = self._parse_isotime(timestr)
-        if components[0] == 24:
-            components[0] = 0
-        return time(*components)
+        pass
 
     @_takes_ascii
     def parse_tzstr(self, tzstr, zero_as_utc=True):
@@ -196,7 +171,7 @@ class isoparser(object):
             :class:`dateutil.tz.tzutc` for ``Z`` and (if ``zero_as_utc`` is
             specified) offsets equivalent to UTC.
         """
-        return self._parse_tzstr(tzstr, zero_as_utc=zero_as_utc)
+        pass
 
     # Constants
     _DATE_SEP = b'-'

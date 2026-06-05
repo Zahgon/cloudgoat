@@ -137,102 +137,25 @@ TableFormat = namedtuple(
 def _pipe_segment_with_colons(align, colwidth):
     """Return a segment of a horizontal line with optional colons which
     indicate column's alignment (as in `pipe` output format)."""
-    w = colwidth
-    if align in ["right", "decimal"]:
-        return ("-" * (w - 1)) + ":"
-    elif align == "center":
-        return ":" + ("-" * (w - 2)) + ":"
-    elif align == "left":
-        return ":" + ("-" * (w - 1))
-    else:
-        return "-" * w
+    pass
 
 
 def _pipe_line_with_colons(colwidths, colaligns):
     """Return a horizontal line with optional colons to indicate column's
     alignment (as in `pipe` output format)."""
-    if not colaligns:  # e.g. printing an empty data frame (github issue #15)
-        colaligns = [""] * len(colwidths)
-    segments = [_pipe_segment_with_colons(a, w) for a, w in zip(colaligns, colwidths)]
-    return "|" + "|".join(segments) + "|"
+    pass
 
 
-def _mediawiki_row_with_attrs(separator, cell_values, colwidths, colaligns):
-    alignment = {
-        "left": "",
-        "right": 'align="right"| ',
-        "center": 'align="center"| ',
-        "decimal": 'align="right"| ',
-    }
-    # hard-coded padding _around_ align attribute and value together
-    # rather than padding parameter which affects only the value
-    values_with_attrs = [
-        " " + alignment.get(a, "") + c + " " for c, a in zip(cell_values, colaligns)
-    ]
-    colsep = separator * 2
-    return (separator + colsep.join(values_with_attrs)).rstrip()
 
 
-def _textile_row_with_attrs(cell_values, colwidths, colaligns):
-    cell_values[0] += " "
-    alignment = {"left": "<.", "right": ">.", "center": "=.", "decimal": ">."}
-    values = (alignment.get(a, "") + v for a, v in zip(colaligns, cell_values))
-    return "|" + "|".join(values) + "|"
 
 
-def _html_begin_table_without_header(colwidths_ignore, colaligns_ignore):
-    # this table header will be suppressed if there is a header row
-    return "<table>\n<tbody>"
 
 
-def _html_row_with_attrs(celltag, unsafe, cell_values, colwidths, colaligns):
-    alignment = {
-        "left": "",
-        "right": ' style="text-align: right;"',
-        "center": ' style="text-align: center;"',
-        "decimal": ' style="text-align: right;"',
-    }
-    if unsafe:
-        values_with_attrs = [
-            "<{0}{1}>{2}</{0}>".format(celltag, alignment.get(a, ""), c)
-            for c, a in zip(cell_values, colaligns)
-        ]
-    else:
-        values_with_attrs = [
-            "<{0}{1}>{2}</{0}>".format(celltag, alignment.get(a, ""), htmlescape(c))
-            for c, a in zip(cell_values, colaligns)
-        ]
-    rowhtml = "<tr>{}</tr>".format("".join(values_with_attrs).rstrip())
-    if celltag == "th":  # it's a header row, create a new table header
-        rowhtml = "<table>\n<thead>\n{}\n</thead>\n<tbody>".format(rowhtml)
-    return rowhtml
 
 
-def _moin_row_with_attrs(celltag, cell_values, colwidths, colaligns, header=""):
-    alignment = {
-        "left": "",
-        "right": '<style="text-align: right;">',
-        "center": '<style="text-align: center;">',
-        "decimal": '<style="text-align: right;">',
-    }
-    values_with_attrs = [
-        "{0}{1} {2} ".format(celltag, alignment.get(a, ""), header + c + header)
-        for c, a in zip(cell_values, colaligns)
-    ]
-    return "".join(values_with_attrs) + "||"
 
 
-def _latex_line_begin_tabular(colwidths, colaligns, booktabs=False, longtable=False):
-    alignment = {"left": "l", "right": "r", "center": "c", "decimal": "r"}
-    tabular_columns_fmt = "".join([alignment.get(a, "l") for a in colaligns])
-    return "\n".join(
-        [
-            ("\\begin{tabular}{" if not longtable else "\\begin{longtable}{")
-            + tabular_columns_fmt
-            + "}",
-            "\\toprule" if booktabs else "\\hline",
-        ]
-    )
 
 
 LATEX_ESCAPE_RULES = {
@@ -251,13 +174,6 @@ LATEX_ESCAPE_RULES = {
 }
 
 
-def _latex_row(cell_values, colwidths, colaligns, escrules=LATEX_ESCAPE_RULES):
-    def escape_char(c):
-        return escrules.get(c, c)
-
-    escaped_values = ["".join(map(escape_char, cell)) for cell in cell_values]
-    rowfmt = DataRow("", "&", "\\\\")
-    return _build_simple_row(escaped_values, rowfmt)
 
 
 def _rst_escape_first_column(rows, headers):
@@ -578,16 +494,7 @@ def simple_separated_format(separator):
     True
 
     """
-    return TableFormat(
-        None,
-        None,
-        None,
-        None,
-        headerrow=DataRow("", separator, ""),
-        datarow=DataRow("", separator, ""),
-        padding=0,
-        with_header_hide=None,
-    )
+    pass
 
 
 def _isconvertible(conv, string):
@@ -747,8 +654,6 @@ def _padboth(width, s):
     return fmt.format(s)
 
 
-def _padnone(ignore_width, s):
-    return s
 
 
 def _strip_invisible(s):
@@ -772,15 +677,7 @@ def _visible_width(s):
     (5, 5)
 
     """
-    # optional wide-character support
-    if wcwidth is not None and WIDE_CHARS_MODE:
-        len_fn = wcwidth.wcswidth
-    else:
-        len_fn = len
-    if isinstance(s, _text_type) or isinstance(s, _binary_type):
-        return len_fn(_strip_invisible(s))
-    else:
-        return len_fn(_text_type(s))
+    pass
 
 
 def _is_multiline(s):
@@ -915,25 +812,6 @@ def _align_column(
     return padded_strings
 
 
-def _more_generic(type1, type2):
-    types = {
-        _none_type: 0,
-        _bool_type: 1,
-        int: 2,
-        float: 3,
-        _binary_type: 4,
-        _text_type: 5,
-    }
-    invtypes = {
-        5: _text_type,
-        4: _binary_type,
-        3: float,
-        2: int,
-        1: _bool_type,
-        0: _none_type,
-    }
-    moregeneric = max(types.get(type1, 5), types.get(type2, 5))
-    return invtypes[moregeneric]
 
 
 def _column_type(strings, has_invisible=True, numparse=True):
@@ -1647,13 +1525,6 @@ def _expand_numparse(disable_numparse, column_count):
         return [not disable_numparse] * column_count
 
 
-def _pad_row(cells, padding):
-    if cells:
-        pad = " " * padding
-        padded_cells = [pad + cell + pad for cell in cells]
-        return padded_cells
-    else:
-        return cells
 
 
 def _build_simple_row(padded_cells, rowfmt):
@@ -1664,34 +1535,11 @@ def _build_simple_row(padded_cells, rowfmt):
 
 def _build_row(padded_cells, colwidths, colaligns, rowfmt):
     "Return a string which represents a row of data cells."
-    if not rowfmt:
-        return None
-    if hasattr(rowfmt, "__call__"):
-        return rowfmt(padded_cells, colwidths, colaligns)
-    else:
-        return _build_simple_row(padded_cells, rowfmt)
+    pass
 
 
-def _append_basic_row(lines, padded_cells, colwidths, colaligns, rowfmt):
-    lines.append(_build_row(padded_cells, colwidths, colaligns, rowfmt))
-    return lines
 
 
-def _append_multiline_row(
-    lines, padded_multiline_cells, padded_widths, colaligns, rowfmt, pad
-):
-    colwidths = [w - 2 * pad for w in padded_widths]
-    cells_lines = [c.splitlines() for c in padded_multiline_cells]
-    nlines = max(map(len, cells_lines))  # number of lines in the row
-    # vertically pad cells where some lines are missing
-    cells_lines = [
-        (cl + [" " * w] * (nlines - len(cl))) for cl, w in zip(cells_lines, colwidths)
-    ]
-    lines_cells = [[cl[i] for cl in cells_lines] for i in range(nlines)]
-    for ln in lines_cells:
-        padded_ln = _pad_row(ln, pad)
-        _append_basic_row(lines, padded_ln, colwidths, colaligns, rowfmt)
-    return lines
 
 
 def _build_line(colwidths, colaligns, linefmt):
@@ -1715,13 +1563,11 @@ class JupyterHTMLStr(str):
     """Wrap the string with a _repr_html_ method so that Jupyter
     displays the HTML table"""
 
-    def _repr_html_(self):
-        return self
 
     @property
     def str(self):
         """add a .str property so that the raw string is still accessible"""
-        return self
+        pass
 
 
 def _format_table(fmt, headers, rows, colwidths, colaligns, is_multiline):

@@ -16,7 +16,7 @@ from cloudgoat.core.python.python_terraform import VariableFiles, Terraform
 
 def allowed_gai_family():
     """Monkey patch for urllib3_cn.allowed_gai_family which forces IPv4 connections."""
-    return socket.AF_INET
+    pass
 
 
 urllib3_cn.allowed_gai_family = allowed_gai_family

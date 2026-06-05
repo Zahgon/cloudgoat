@@ -60,7 +60,7 @@ _notime = memorized_timedelta(0)
 
 def _to_seconds(td):
     '''Convert a timedelta to seconds'''
-    return td.seconds + td.days * 24 * 60 * 60
+    pass
 
 
 class BaseTzInfo(tzinfo):

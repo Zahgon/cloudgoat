@@ -56,50 +56,8 @@ while True:
         field_size_limit = int(field_size_limit / 10)
 
 
-def output_options(fn):
-    for decorator in reversed(
-        (
-            click.option(
-                "--nl",
-                help="Output newline-delimited JSON",
-                is_flag=True,
-                default=False,
-            ),
-            click.option(
-                "--arrays",
-                help="Output rows as arrays instead of objects",
-                is_flag=True,
-                default=False,
-            ),
-            click.option("--csv", is_flag=True, help="Output CSV"),
-            click.option("--tsv", is_flag=True, help="Output TSV"),
-            click.option("--no-headers", is_flag=True, help="Omit CSV headers"),
-            click.option("-t", "--table", is_flag=True, help="Output as a table"),
-            click.option(
-                "--fmt",
-                help="Table format - one of {}".format(
-                    ", ".join(tabulate.tabulate_formats)
-                ),
-                default="simple",
-            ),
-            click.option(
-                "--json-cols",
-                help="Detect JSON cols and output them as JSON, not escaped strings",
-                is_flag=True,
-                default=False,
-            ),
-        )
-    ):
-        fn = decorator(fn)
-    return fn
 
 
-def load_extension_option(fn):
-    return click.option(
-        "--load-extension",
-        multiple=True,
-        help="SQLite extensions to load",
-    )(fn)
 
 
 @click.group(
@@ -162,46 +120,7 @@ def tables(
     views=False,
 ):
     """List the tables in the database"""
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    headers = ["view" if views else "table"]
-    if counts:
-        headers.append("count")
-    if columns:
-        headers.append("columns")
-    if schema:
-        headers.append("schema")
-
-    def _iter():
-        if views:
-            items = db.view_names()
-        else:
-            items = db.table_names(fts4=fts4, fts5=fts5)
-        for name in items:
-            row = [name]
-            if counts:
-                row.append(db[name].count)
-            if columns:
-                cols = [c.name for c in db[name].columns]
-                if csv:
-                    row.append("\n".join(cols))
-                else:
-                    row.append(cols)
-            if schema:
-                row.append(db[name].schema)
-            yield row
-
-    if table:
-        print(tabulate.tabulate(_iter(), headers=headers, tablefmt=fmt))
-    elif csv or tsv:
-        writer = csv_std.writer(sys.stdout, dialect="excel-tab" if tsv else "excel")
-        if not no_headers:
-            writer.writerow(headers)
-        for row in _iter():
-            writer.writerow(row)
-    else:
-        for line in output_rows(_iter(), headers, nl, arrays, json_cols):
-            click.echo(line)
+    pass
 
 
 @cli.command()
@@ -243,24 +162,7 @@ def views(
     load_extension,
 ):
     """List the views in the database"""
-    tables.callback(
-        path=path,
-        fts4=False,
-        fts5=False,
-        counts=counts,
-        nl=nl,
-        arrays=arrays,
-        csv=csv,
-        tsv=tsv,
-        no_headers=no_headers,
-        table=table,
-        fmt=fmt,
-        json_cols=json_cols,
-        columns=columns,
-        schema=schema,
-        load_extension=load_extension,
-        views=True,
-    )
+    pass
 
 
 @cli.command()
@@ -274,15 +176,7 @@ def views(
 @load_extension_option
 def optimize(path, tables, no_vacuum, load_extension):
     """Optimize all full-text search tables and then run VACUUM - should shrink the database file"""
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    if not tables:
-        tables = db.table_names(fts4=True) + db.table_names(fts5=True)
-    with db.conn:
-        for table in tables:
-            db[table].optimize()
-    if not no_vacuum:
-        db.vacuum()
+    pass
 
 
 @cli.command(name="rebuild-fts")
@@ -295,13 +189,7 @@ def optimize(path, tables, no_vacuum, load_extension):
 @load_extension_option
 def rebuild_fts(path, tables, load_extension):
     """Rebuild all or specific full-text search tables"""
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    if not tables:
-        tables = db.table_names(fts4=True) + db.table_names(fts5=True)
-    with db.conn:
-        for table in tables:
-            db[table].rebuild_fts()
+    pass
 
 
 @cli.command()
@@ -449,9 +337,7 @@ def index_foreign_keys(path, load_extension):
     """
     Ensure every foreign key column has an index on it.
     """
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    db.index_foreign_keys()
+    pass
 
 
 @cli.command(name="create-index")
@@ -512,21 +398,7 @@ def enable_fts(
     path, table, column, fts4, fts5, tokenize, create_triggers, load_extension
 ):
     "Enable full-text search for specific table and columns"
-    fts_version = "FTS5"
-    if fts4 and fts5:
-        click.echo("Can only use one of --fts4 or --fts5", err=True)
-        return
-    elif fts4:
-        fts_version = "FTS4"
-
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    db[table].enable_fts(
-        column,
-        fts_version=fts_version,
-        tokenize=tokenize,
-        create_triggers=create_triggers,
-    )
+    pass
 
 
 @cli.command(name="populate-fts")
@@ -540,9 +412,7 @@ def enable_fts(
 @load_extension_option
 def populate_fts(path, table, column, load_extension):
     "Re-populate full-text search for specific table and columns"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    db[table].populate_fts(column)
+    pass
 
 
 @cli.command(name="disable-fts")
@@ -555,9 +425,7 @@ def populate_fts(path, table, column, load_extension):
 @load_extension_option
 def disable_fts(path, table, load_extension):
     "Disable full-text search for specific table"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    db[table].disable_fts()
+    pass
 
 
 @cli.command(name="enable-wal")
@@ -570,10 +438,7 @@ def disable_fts(path, table, load_extension):
 @load_extension_option
 def enable_wal(path, load_extension):
     "Enable WAL for database files"
-    for path_ in path:
-        db = sqlite_utils.Database(path_)
-        _load_extensions(db, load_extension)
-        db.enable_wal()
+    pass
 
 
 @cli.command(name="disable-wal")
@@ -586,10 +451,7 @@ def enable_wal(path, load_extension):
 @load_extension_option
 def disable_wal(path, load_extension):
     "Disable WAL for database files"
-    for path_ in path:
-        db = sqlite_utils.Database(path_)
-        _load_extensions(db, load_extension)
-        db.disable_wal()
+    pass
 
 
 @cli.command(name="enable-counts")
@@ -602,17 +464,7 @@ def disable_wal(path, load_extension):
 @load_extension_option
 def enable_counts(path, tables, load_extension):
     "Configure triggers to update a _counts table with row counts"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    if not tables:
-        db.enable_counts()
-    else:
-        # Check all tables exist
-        bad_tables = [table for table in tables if not db[table].exists()]
-        if bad_tables:
-            raise click.ClickException("Invalid tables: {}".format(bad_tables))
-        for table in tables:
-            db[table].enable_counts()
+    pass
 
 
 @cli.command(name="reset-counts")
@@ -624,72 +476,9 @@ def enable_counts(path, tables, load_extension):
 @load_extension_option
 def reset_counts(path, load_extension):
     "Reset calculated counts in the _counts table"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    db.reset_counts()
+    pass
 
 
-def insert_upsert_options(fn):
-    for decorator in reversed(
-        (
-            click.argument(
-                "path",
-                type=click.Path(file_okay=True, dir_okay=False, allow_dash=False),
-                required=True,
-            ),
-            click.argument("table"),
-            click.argument("json_file", type=click.File("rb"), required=True),
-            click.option(
-                "--pk", help="Columns to use as the primary key, e.g. id", multiple=True
-            ),
-            click.option("--nl", is_flag=True, help="Expect newline-delimited JSON"),
-            click.option("--flatten", is_flag=True, help="Flatten nested JSON objects"),
-            click.option("-c", "--csv", is_flag=True, help="Expect CSV"),
-            click.option("--tsv", is_flag=True, help="Expect TSV"),
-            click.option("--delimiter", help="Delimiter to use for CSV files"),
-            click.option("--quotechar", help="Quote character to use for CSV/TSV"),
-            click.option(
-                "--sniff", is_flag=True, help="Detect delimiter and quote character"
-            ),
-            click.option(
-                "--no-headers", is_flag=True, help="CSV file has no header row"
-            ),
-            click.option(
-                "--batch-size", type=int, default=100, help="Commit every X records"
-            ),
-            click.option(
-                "--alter",
-                is_flag=True,
-                help="Alter existing table to add any missing columns",
-            ),
-            click.option(
-                "--not-null",
-                multiple=True,
-                help="Columns that should be created as NOT NULL",
-            ),
-            click.option(
-                "--default",
-                multiple=True,
-                type=(str, str),
-                help="Default value that should be set for a column",
-            ),
-            click.option(
-                "--encoding",
-                help="Character encoding for input, defaults to utf-8",
-            ),
-            click.option(
-                "-d",
-                "--detect-types",
-                is_flag=True,
-                envvar="SQLITE_UTILS_DETECT_TYPES",
-                help="Detect types for columns in CSV/TSV data",
-            ),
-            load_extension_option,
-            click.option("--silent", is_flag=True, help="Do not show progress bar"),
-        )
-    ):
-        fn = decorator(fn)
-    return fn
 
 
 def insert_upsert_implementation(
@@ -938,31 +727,7 @@ def upsert(
     an incoming record has a primary key that matches an existing record
     the existing record will be updated.
     """
-    try:
-        insert_upsert_implementation(
-            path,
-            table,
-            json_file,
-            pk,
-            nl,
-            flatten,
-            csv,
-            tsv,
-            delimiter,
-            quotechar,
-            sniff,
-            no_headers,
-            batch_size,
-            alter=alter,
-            upsert=True,
-            not_null=not_null,
-            default=default,
-            encoding=encoding,
-            load_extension=load_extension,
-            silent=silent,
-        )
-    except UnicodeDecodeError as ex:
-        raise click.ClickException(UNICODE_ERROR.format(ex))
+    pass
 
 
 @cli.command(name="create-table")
@@ -1060,12 +825,7 @@ def create_table(
 @load_extension_option
 def drop_table(path, table, ignore, load_extension):
     "Drop the specified table"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    try:
-        db[table].drop(ignore=ignore)
-    except sqlite3.OperationalError:
-        raise click.ClickException('Table "{}" does not exist'.format(table))
+    pass
 
 
 @cli.command(name="create-view")
@@ -1089,21 +849,7 @@ def drop_table(path, table, ignore, load_extension):
 @load_extension_option
 def create_view(path, view, select, ignore, replace, load_extension):
     "Create a view for the provided SELECT query"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    # Does view already exist?
-    if view in db.view_names():
-        if ignore:
-            return
-        elif replace:
-            db[view].drop()
-        else:
-            raise click.ClickException(
-                'View "{}" already exists. Use --replace to delete and replace it.'.format(
-                    view
-                )
-            )
-    db.create_view(view, select)
+    pass
 
 
 @cli.command(name="drop-view")
@@ -1117,12 +863,7 @@ def create_view(path, view, select, ignore, replace, load_extension):
 @load_extension_option
 def drop_view(path, view, ignore, load_extension):
     "Drop the specified view"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    try:
-        db[view].drop(ignore=ignore)
-    except sqlite3.OperationalError:
-        raise click.ClickException('View "{}" does not exist'.format(view))
+    pass
 
 
 @cli.command()
@@ -1270,68 +1011,7 @@ def memory(
     \b
         sqlite-utils memory animals.csv --schema
     """
-    db = sqlite_utils.Database(memory=True)
-    # If --dump or --save or --analyze used but no paths detected, assume SQL query is a path:
-    if (dump or save or schema or analyze) and not paths:
-        paths = [sql]
-        sql = None
-    for i, path in enumerate(paths):
-        # Path may have a :format suffix
-        if ":" in path and path.rsplit(":", 1)[-1].upper() in Format.__members__:
-            path, suffix = path.rsplit(":", 1)
-            format = Format[suffix.upper()]
-        else:
-            format = None
-        if path in ("-", "stdin"):
-            csv_fp = sys.stdin.buffer
-            csv_table = "stdin"
-        else:
-            csv_path = pathlib.Path(path)
-            csv_table = csv_path.stem
-            csv_fp = csv_path.open("rb")
-        rows, format_used = rows_from_file(csv_fp, format=format, encoding=encoding)
-        tracker = None
-        if format_used in (Format.CSV, Format.TSV) and not no_detect_types:
-            tracker = TypeTracker()
-            rows = tracker.wrap(rows)
-        db[csv_table].insert_all(rows, alter=True)
-        if tracker is not None:
-            db[csv_table].transform(types=tracker.types)
-        # Add convenient t / t1 / t2 views
-        view_names = ["t{}".format(i + 1)]
-        if i == 0:
-            view_names.append("t")
-        for view_name in view_names:
-            if not db[view_name].exists():
-                db.create_view(view_name, "select * from [{}]".format(csv_table))
-
-    if analyze:
-        _analyze(db, tables=None, columns=None, save=False)
-        return
-
-    if dump:
-        for line in db.conn.iterdump():
-            click.echo(line)
-        return
-
-    if schema:
-        click.echo(db.schema)
-        return
-
-    if save:
-        db2 = sqlite_utils.Database(save)
-        for line in db.conn.iterdump():
-            db2.execute(line)
-        return
-
-    for alias, attach_path in attach:
-        db.attach(alias, attach_path)
-    _load_extensions(db, load_extension)
-    db.register_fts4_bm25()
-
-    _execute_query(
-        db, sql, param, raw, table, csv, tsv, no_headers, fmt, nl, arrays, json_cols
-    )
+    pass
 
 
 def _execute_query(
@@ -1486,23 +1166,7 @@ def rows(
     load_extension,
 ):
     "Output all rows in the specified table"
-    columns = "*"
-    if column:
-        columns = ", ".join("[{}]".format(c) for c in column)
-    ctx.invoke(
-        query,
-        path=path,
-        sql="select {} from [{}]".format(columns, dbtable),
-        nl=nl,
-        arrays=arrays,
-        csv=csv,
-        tsv=tsv,
-        no_headers=no_headers,
-        table=table,
-        fmt=fmt,
-        json_cols=json_cols,
-        load_extension=load_extension,
-    )
+    pass
 
 
 @cli.command()
@@ -1530,26 +1194,7 @@ def triggers(
     load_extension,
 ):
     "Show triggers configured in this database"
-    sql = "select name, tbl_name as [table], sql from sqlite_master where type = 'trigger'"
-    if tables:
-        quote = sqlite_utils.Database(memory=True).quote
-        sql += " and [table] in ({})".format(
-            ", ".join(quote(table) for table in tables)
-        )
-    ctx.invoke(
-        query,
-        path=path,
-        sql=sql,
-        nl=nl,
-        arrays=arrays,
-        csv=csv,
-        tsv=tsv,
-        no_headers=no_headers,
-        table=table,
-        fmt=fmt,
-        json_cols=json_cols,
-        load_extension=load_extension,
-    )
+    pass
 
 
 @cli.command()
@@ -1579,38 +1224,7 @@ def indexes(
     load_extension,
 ):
     "Show indexes for this database"
-    sql = """
-    select
-      sqlite_master.name as "table",
-      indexes.name as index_name,
-      xinfo.*
-    from sqlite_master
-      join pragma_index_list(sqlite_master.name) indexes
-      join pragma_index_xinfo(index_name) xinfo
-    where
-      sqlite_master.type = 'table'
-    """
-    if tables:
-        quote = sqlite_utils.Database(memory=True).quote
-        sql += " and sqlite_master.name in ({})".format(
-            ", ".join(quote(table) for table in tables)
-        )
-    if not aux:
-        sql += " and xinfo.key = 1"
-    ctx.invoke(
-        query,
-        path=path,
-        sql=sql,
-        nl=nl,
-        arrays=arrays,
-        csv=csv,
-        tsv=tsv,
-        no_headers=no_headers,
-        table=table,
-        fmt=fmt,
-        json_cols=json_cols,
-        load_extension=load_extension,
-    )
+    pass
 
 
 @cli.command()
@@ -1627,13 +1241,7 @@ def schema(
     load_extension,
 ):
     "Show full schema for this database or for specified tables"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    if tables:
-        for table in tables:
-            click.echo(db[table].schema)
-    else:
-        click.echo(db.schema)
+    pass
 
 
 @cli.command()
@@ -1848,90 +1456,7 @@ def insert_files(
         -c size:size \\
         --pk name
     """
-    if not column:
-        if text:
-            column = ["path:path", "content_text:content_text", "size:size"]
-        else:
-            column = ["path:path", "content:content", "size:size"]
-        if not pk:
-            pk = "path"
-
-    def yield_paths_and_relative_paths():
-        for f_or_d in file_or_dir:
-            path = pathlib.Path(f_or_d)
-            if f_or_d == "-":
-                yield "-", "-"
-            elif path.is_dir():
-                for subpath in path.rglob("*"):
-                    if subpath.is_file():
-                        yield subpath, subpath.relative_to(path)
-            elif path.is_file():
-                yield path, path
-
-    # Load all paths so we can show a progress bar
-    paths_and_relative_paths = list(yield_paths_and_relative_paths())
-
-    with progressbar(paths_and_relative_paths, silent=silent) as bar:
-
-        def to_insert():
-            for path, relative_path in bar:
-                row = {}
-                # content_text is special case as it considers 'encoding'
-
-                def _content_text(p):
-                    resolved = p.resolve()
-                    try:
-                        return resolved.read_text(encoding=encoding)
-                    except UnicodeDecodeError as e:
-                        raise UnicodeDecodeErrorForPath(e, resolved)
-
-                lookups = dict(FILE_COLUMNS, content_text=_content_text)
-                if path == "-":
-                    stdin_data = sys.stdin.buffer.read()
-                    # We only support a subset of columns for this case
-                    lookups = {
-                        "name": lambda p: name or "-",
-                        "path": lambda p: name or "-",
-                        "content": lambda p: stdin_data,
-                        "content_text": lambda p: stdin_data.decode(
-                            encoding or "utf-8"
-                        ),
-                        "sha256": lambda p: hashlib.sha256(stdin_data).hexdigest(),
-                        "md5": lambda p: hashlib.md5(stdin_data).hexdigest(),
-                        "size": lambda p: len(stdin_data),
-                    }
-                for coldef in column:
-                    if ":" in coldef:
-                        colname, coltype = coldef.rsplit(":", 1)
-                    else:
-                        colname, coltype = coldef, coldef
-                    try:
-                        value = lookups[coltype](path)
-                        row[colname] = value
-                    except KeyError:
-                        raise click.ClickException(
-                            "'{}' is not a valid column definition - options are {}".format(
-                                coltype, ", ".join(lookups.keys())
-                            )
-                        )
-                    # Special case for --name
-                    if coltype == "name" and name:
-                        row[colname] = name
-                yield row
-
-        db = sqlite_utils.Database(path)
-        _load_extensions(db, load_extension)
-        try:
-            with db.conn:
-                db[table].insert_all(
-                    to_insert(), pk=pk, alter=alter, replace=replace, upsert=upsert
-                )
-        except UnicodeDecodeErrorForPath as e:
-            raise click.ClickException(
-                UNICODE_ERROR.format(
-                    "Could not read file '{}' as text\n\n{}".format(e.path, e.exception)
-                )
-            )
+    pass
 
 
 @cli.command(name="analyze-tables")
@@ -1959,61 +1484,9 @@ def analyze_tables(
     load_extension,
 ):
     "Analyze the columns in one or more tables"
-    db = sqlite_utils.Database(path)
-    _load_extensions(db, load_extension)
-    _analyze(db, tables, columns, save)
+    pass
 
 
-def _analyze(db, tables, columns, save):
-    if not tables:
-        tables = db.table_names()
-    todo = []
-    table_counts = {}
-    for table in tables:
-        table_counts[table] = db[table].count
-        for column in db[table].columns:
-            if not columns or column.name in columns:
-                todo.append((table, column.name))
-    # Now we now how many we need to do
-    for i, (table, column) in enumerate(todo):
-        column_details = db[table].analyze_column(
-            column, total_rows=table_counts[table], value_truncate=80
-        )
-        if save:
-            db["_analyze_tables_"].insert(
-                column_details._asdict(), pk=("table", "column"), replace=True
-            )
-        most_common_rendered = _render_common(
-            "\n\n  Most common:", column_details.most_common
-        )
-        least_common_rendered = _render_common(
-            "\n\n  Least common:", column_details.least_common
-        )
-        details = (
-            (
-                textwrap.dedent(
-                    """
-        {table}.{column}: ({i}/{total})
-
-          Total rows: {total_rows}
-          Null rows: {num_null}
-          Blank rows: {num_blank}
-
-          Distinct values: {num_distinct}{most_common_rendered}{least_common_rendered}
-        """
-                )
-                .strip()
-                .format(
-                    i=i + 1,
-                    total=len(todo),
-                    most_common_rendered=most_common_rendered,
-                    least_common_rendered=least_common_rendered,
-                    **column_details._asdict()
-                )
-            )
-            + "\n"
-        )
-        click.echo(details)
 
 
 def _generate_convert_help():
@@ -2169,13 +1642,6 @@ def convert(
             )
 
 
-def _render_common(title, values):
-    if values is None:
-        return ""
-    lines = [title]
-    for value, count in values:
-        lines.append("    {}: {}".format(count, value))
-    return "\n".join(lines)
 
 
 class UnicodeDecodeErrorForPath(Exception):
@@ -2239,11 +1705,6 @@ def maybe_json(value):
         return value
 
 
-def json_binary(value):
-    if isinstance(value, bytes):
-        return {"$base64": True, "encoded": base64.b64encode(value).decode("latin-1")}
-    else:
-        raise TypeError
 
 
 def _load_extensions(db, load_extension):

@@ -8,79 +8,14 @@ s3_client = boto3.client('s3')
 ec2_client = boto3.client('ec2')
 
 
-def inventory_iam_roles():
-    roles = []
-    paginator = iam_client.get_paginator('list_roles')
-    for page in paginator.paginate(PaginationConfig={'MaxItems': MAX_ITEMS}):
-        for r in page.get('Roles', []):
-            roles.append({
-                'roleName': r['RoleName'],
-                'arn': r['Arn'],
-                'path': r['Path']
-            })
-    return {'iamRoles': roles}
 
 
-def inventory_iam_users():
-    users = []
-    paginator = iam_client.get_paginator('list_users')
-    for page in paginator.paginate(PaginationConfig={'MaxItems': MAX_ITEMS}):
-        for u in page.get('Users', []):
-            users.append({
-                'roleName': u['UserName'],
-                'arn': u['Arn'],
-                'path': u['Path']
-            })
-    return {'iamUsers': users}
 
 
-def inventory_ec2_instances():
-    instances = []
-    paginator = ec2_client.get_paginator('describe_instances')
-    for page in paginator.paginate(PaginationConfig={'MaxItems': MAX_ITEMS}):
-        for reservation in page.get('Reservations', []):
-            for inst in reservation.get('Instances', []):
-                ni_list = []
-                for ni in inst.get('NetworkInterfaces', []):
-                    ni_list.append({
-                        'networkInterfaceId': ni['NetworkInterfaceId'],
-                        'privateIpAddress': ni['PrivateIpAddress'],
-                        'subnetId': ni['SubnetId'],
-                        'vpcId': ni['VpcId'],
-                        'status': ni['Status']
-                    })
-
-                instances.append({
-                    'instanceId': inst['InstanceId'],
-                    'instanceType': inst['InstanceType'],
-                    'state': inst['State']['Name'],
-                    'vpcId': inst['VpcId'],
-                    'subnetId': inst['SubnetId'],
-                    'privateIpAddress': inst['PrivateIpAddress'],
-                    'networkInterfaces': ni_list
-                })
-    return {"ec2Instances": instances}
 
 
-def inventory_s3_buckets():
-    buckets = []
-    paginator = s3_client.get_paginator('list_buckets')
-    for page in paginator.paginate(PaginationConfig={'MaxItems': MAX_ITEMS}):
-        for buck in page.get('Buckets', []):
-            buckets.append({
-                'name': buck['Name'],
-                'creationDate': buck['CreationDate'].isoformat()
-            })
-    return {'s3Buckets': buckets}
 
 
-def inventory_all():
-    result = {}
-    result.update(inventory_iam_roles())
-    result.update(inventory_s3_buckets())
-    result.update(inventory_iam_users())
-    result.update(inventory_ec2_instances())
-    return result
 
 
 # Map operation values → implementation functions

@@ -35,8 +35,6 @@ class EchoingStdin:
     def read(self, n: int = -1) -> bytes:
         return self._echo(self._input.read(n))
 
-    def read1(self, n: int = -1) -> bytes:
-        return self._echo(self._input.read1(n))  # type: ignore
 
     def readline(self, n: int = -1) -> bytes:
         return self._echo(self._input.readline(n))
@@ -69,13 +67,7 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
         self._name = name
         self._mode = mode
 
-    @property
-    def name(self) -> str:
-        return self._name
 
-    @property
-    def mode(self) -> str:
-        return self._mode
 
 
 def make_input_stream(
@@ -133,23 +125,17 @@ class Result:
     @property
     def output(self) -> str:
         """The (standard) output as unicode string."""
-        return self.stdout
+        pass
 
     @property
     def stdout(self) -> str:
         """The standard output as unicode string."""
-        return self.stdout_bytes.decode(self.runner.charset, "replace").replace(
-            "\r\n", "\n"
-        )
+        pass
 
     @property
     def stderr(self) -> str:
         """The standard error as unicode string."""
-        if self.stderr_bytes is None:
-            raise ValueError("stderr not separately captured")
-        return self.stderr_bytes.decode(self.runner.charset, "replace").replace(
-            "\r\n", "\n"
-        )
+        pass
 
     def __repr__(self) -> str:
         exc_str = repr(self.exception) if self.exception else "okay"
@@ -274,19 +260,7 @@ class CliRunner:
                 errors="backslashreplace",
             )
 
-        @_pause_echo(echo_input)  # type: ignore
-        def visible_input(prompt: t.Optional[str] = None) -> str:
-            sys.stdout.write(prompt or "")
-            val = text_input.readline().rstrip("\r\n")
-            sys.stdout.write(f"{val}\n")
-            sys.stdout.flush()
-            return val
 
-        @_pause_echo(echo_input)  # type: ignore
-        def hidden_input(prompt: t.Optional[str] = None) -> str:
-            sys.stdout.write(f"{prompt or ''}\n")
-            sys.stdout.flush()
-            return text_input.readline().rstrip("\r\n")
 
         @_pause_echo(echo_input)  # type: ignore
         def _getchar(echo: bool) -> str:
@@ -463,17 +437,4 @@ class CliRunner:
         .. versionchanged:: 8.0
             Added the ``temp_dir`` parameter.
         """
-        cwd = os.getcwd()
-        t = tempfile.mkdtemp(dir=temp_dir)
-        os.chdir(t)
-
-        try:
-            yield t
-        finally:
-            os.chdir(cwd)
-
-            if temp_dir is None:
-                try:
-                    shutil.rmtree(t)
-                except OSError:  # noqa: B014
-                    pass
+        pass

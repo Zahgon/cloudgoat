@@ -25,8 +25,7 @@ def timezone(dt, timezone='utc'):
 
 def timezone_convert(dt, timezone):
     """Convert aware datetime to a different timezone."""
-    timezone = pytz.timezone(timezone)
-    return dt.astimezone(timezone)
+    pass
 
 
 def increment(dt, business_days=0, holidays=[], **inc):
@@ -82,73 +81,44 @@ def date_range(start_dt, end_dt, holidays=[], **inc):
 
 def month_start(dt):
     """Get the beginning of the month for a given date."""
-    return date(*dt.timetuple()[:2]+(1,))
+    pass
 
 
 def month_end(dt):
     """Get the end of the month for a given date."""
-    return month_start(dt) - timedelta(days=1)
+    pass
 
 
 def quarter(dt):
     """Get the quarter for a given date."""
-    quarter_months = [range(r, r+3) for r in (i for i in QUARTER_MONTHS)]
-    for qm in quarter_months:
-        if dt.month in qm:
-            return quarter_months.index(qm) + 1
+    pass
 
 
 def quarter_start(dt):
     """Get the beginning of the quarter for a given date."""
-    m = QUARTER_MONTHS.index(quarter(dt)-1) + 2
-    return date(dt.year, m, 1)
+    pass
 
 
 def quarter_end(dt):
     """Get the end of the quarter for a given date."""
-    m = QUARTER_MONTHS.index(quarter(dt)-1) + 2
-    return month_end(date(dt.year, m, 1))
+    pass
 
 
-def day_of_year(dt):
-    return dt.timetuple()[7]
 
 
-def microseconds(end_dt, start_dt):
-    d = end_dt - start_dt
-    return (d.days*24*60*60*1000000)+(d.seconds*1000000)
 
 
-def seconds(end_dt, start_dt):
-    d = end_dt - start_dt
-    return (d.days*24*60*60)+d.seconds
 
 
-def minutes(end_dt, start_dt):
-    d = end_dt - start_dt
-    return (d.days*24*60)+(d.seconds/60)
 
 
-def hours(end_dt, start_dt):
-    d = end_dt - start_dt
-    return (d.days*24)+(d.seconds/60/60)
 
 
-def days(end_dt, start_dt):
-    return (end_dt - start_dt).days
 
 
-def weeks(end_dt, start_dt):
-    return int(math.ceil(days(end_dt, start_dt)/7.0))
 
 
-def months(end_dt, start_dt):
-    return days(end_dt, start_dt)/31
 
 
-def years(end_dt, start_dt):
-    return months(end_dt, start_dt)/12
 
 
-def business_days(end_dt, start_dt, holidays=[]):
-    return len(list(date_range(start_dt, end_dt, business_days=1, holidays=holidays)))

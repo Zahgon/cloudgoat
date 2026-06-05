@@ -185,11 +185,7 @@ class CloudGoat:
         }
         return list_commands.get(subcommand, lambda: self.list_scenario_instance(subcommand))()
 
-    def list_aws_scenarios(self):
-        return self.list_all_scenarios(platform_filter='aws')
     
-    def list_azure_scenarios(self):
-        return self.list_all_scenarios(platform_filter='azure')
 
     def display_cloudgoat_help(self, command):
         if not command or len(command) == 1:
@@ -568,100 +564,8 @@ class CloudGoat:
 
         return "destroyed"
 
-    def list_all_scenarios(self, platform_filter=None):
-        undeployed_scenarios = list()
-        deployed_scenario_instance_paths = list()
 
-        for scenario_name in self.scenario_names:
-            scenario_path = find_scenario_dir(self.scenarios_dir, scenario_name)
-            if platform_filter and platform_filter not in scenario_path:
-                continue
 
-            scenario_instance_dir_path = find_scenario_instance_dir(
-                self.base_dir, scenario_name
-            )
-            if scenario_instance_dir_path:
-                deployed_scenario_instance_paths.append(scenario_instance_dir_path)
-
-            else:
-                undeployed_scenarios.append(scenario_name)
-
-        print(
-            f"\n  Deployed scenario instances: {len(deployed_scenario_instance_paths)}"
-        )
-
-        for scenario_instance_dir_path in deployed_scenario_instance_paths:
-            directory_name = os.path.basename(scenario_instance_dir_path)
-            scenario_name, cgid = directory_name.split("_cgid")
-            print(
-                f"\n    {scenario_name}"
-                f"\n        CGID: {'cgid' + cgid}"
-                f"\n        Path: {scenario_instance_dir_path}"
-            )
-
-        print(f"\n  Undeployed scenarios: {len(undeployed_scenarios)}")
-
-        # Visual spacing.
-        if undeployed_scenarios:
-            print(f"")
-
-        for scenario_name in undeployed_scenarios:
-            print(f"    {scenario_name}")
-
-        print(f"")
-
-    def list_deployed_scenario_instances(self):
-        deployed_scenario_instances = list()
-        for scenario_name in self.scenario_names:
-            scenario_instance_dir_path = find_scenario_instance_dir(
-                self.base_dir, scenario_name
-            )
-
-            if scenario_instance_dir_path is None:
-                continue
-            else:
-                deployed_scenario_instances.append(scenario_instance_dir_path)
-
-        if not deployed_scenario_instances:
-            print(
-                f'\n  No scenario instance directories exist. Try "list undeployed" or'
-                f' "list all"\n'
-            )
-            return
-        else:
-            print(
-                f"\n  Deployed scenario instances: {len(deployed_scenario_instances)}"
-            )
-
-        for scenario_instance_dir_path in deployed_scenario_instances:
-            directory_name = os.path.basename(scenario_instance_dir_path)
-            scenario_name, cgid = directory_name.split("_cgid")
-
-            print(
-                f"\n    {scenario_name}"
-                f"\n        CGID: {'cgid' + cgid}"
-                f"\n        Path: {scenario_instance_dir_path}"
-            )
-
-        print("")
-
-    def list_undeployed_scenarios(self):
-        undeployed_scenarios = list()
-        for scenario_name in self.scenario_names:
-            if not find_scenario_instance_dir(self.base_dir, scenario_name):
-                undeployed_scenarios.append(scenario_name)
-
-        if undeployed_scenarios:
-            return print(
-                f"\n  Undeployed scenarios: {len(undeployed_scenarios)}\n\n    "
-                + f"\n    ".join(undeployed_scenarios)
-                + f"\n"
-            )
-        else:
-            return print(
-                f'\n  All scenarios have been deployed. Try "list deployed" or "list'
-                f' all"\n'
-            )
 
     def list_scenario_instance(self, scenario_name_or_path):
         scenario_name = normalize_scenario_name(scenario_name_or_path)

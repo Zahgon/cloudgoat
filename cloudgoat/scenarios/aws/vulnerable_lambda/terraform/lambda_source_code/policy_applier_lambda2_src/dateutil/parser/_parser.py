@@ -222,13 +222,6 @@ class _resultbase(object):
         for attr in self.__slots__:
             setattr(self, attr, None)
 
-    def _repr(self, classname):
-        l = []
-        for attr in self.__slots__:
-            value = getattr(self, attr)
-            if value is not None:
-                l.append("%s=%s" % (attr, repr(value)))
-        return "%s(%s)" % (classname, ", ".join(l))
 
     def __len__(self):
         return (sum(getattr(self, attr) is not None
@@ -399,17 +392,8 @@ class _ymd(list):
         self.mstridx = None
         self.ystridx = None
 
-    @property
-    def has_year(self):
-        return self.ystridx is not None
 
-    @property
-    def has_month(self):
-        return self.mstridx is not None
 
-    @property
-    def has_day(self):
-        return self.dstridx is not None
 
     def could_be_day(self, value):
         if self.has_day:

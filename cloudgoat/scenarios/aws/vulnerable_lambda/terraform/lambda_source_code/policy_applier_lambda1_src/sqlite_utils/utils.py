@@ -222,31 +222,11 @@ class ValueTracker:
             if key.startswith("test_")
         ]
 
-    def test_integer(self, value):
-        try:
-            int(value)
-            return True
-        except (ValueError, TypeError):
-            return False
 
-    def test_float(self, value):
-        try:
-            float(value)
-            return True
-        except (ValueError, TypeError):
-            return False
 
     def __repr__(self):
         return self.guessed_type + ": possibilities = " + repr(self.couldbe)
 
-    @property
-    def guessed_type(self):
-        options = set(self.couldbe.keys())
-        # Return based on precedence
-        for key in self.get_tests():
-            if key in options:
-                return key
-        return "text"
 
     def evaluate(self, value):
         if not value or not self.couldbe:

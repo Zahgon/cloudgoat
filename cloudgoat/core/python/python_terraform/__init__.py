@@ -82,12 +82,6 @@ class Terraform(object):
         self.read_state_file(self.state)
 
     def __getattr__(self, item):
-        def wrapper(*args, **kwargs):
-            cmd_name = str(item)
-            if cmd_name.endswith('_cmd'):
-                cmd_name = cmd_name[:-4]
-            logging.debug('called with %r and %r' % (args, kwargs))
-            return self.cmd(cmd_name, *args, **kwargs)
 
         return wrapper
 
@@ -371,25 +365,7 @@ class Terraform(object):
                  dict of named dicts each with 'value', 'sensitive', and 'type',
                     if NAME is not provided
         """
-        full_value = kwargs.pop('full_value', False)
-        name_provided = (len(args) > 0)
-        kwargs['json'] = IsFlagged
-        if not kwargs.get('capture_output', True) is True:
-          raise ValueError('capture_output is required for this method')
-
-        ret, out, err = self.output_cmd(*args, **kwargs)
-
-        if ret != 0:
-            return None
-
-        out = out.lstrip()
-
-        value = json.loads(out)
-
-        if name_provided and not full_value:
-            value = value['value']
-
-        return value
+        pass
 
     def read_state_file(self, file_path=None):
         """

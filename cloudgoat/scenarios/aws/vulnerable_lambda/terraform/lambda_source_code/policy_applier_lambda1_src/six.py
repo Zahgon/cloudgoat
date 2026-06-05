@@ -84,8 +84,7 @@ def _add_doc(func, doc):
 
 def _import_module(name):
     """Import module, returning the module after the last dot."""
-    __import__(name)
-    return sys.modules[name]
+    pass
 
 
 class _LazyDescr(object):
@@ -116,8 +115,6 @@ class MovedModule(_LazyDescr):
         else:
             self.mod = old
 
-    def _resolve(self):
-        return _import_module(self.mod)
 
     def __getattr__(self, attr):
         _module = self._resolve()
@@ -161,9 +158,6 @@ class MovedAttribute(_LazyDescr):
                 old_attr = name
             self.attr = old_attr
 
-    def _resolve(self):
-        module = _import_module(self.mod)
-        return getattr(module, self.attr)
 
 
 class _SixMetaPathImporter(object):
@@ -186,35 +180,9 @@ class _SixMetaPathImporter(object):
     def _get_module(self, fullname):
         return self.known_modules[self.name + "." + fullname]
 
-    def find_module(self, fullname, path=None):
-        if fullname in self.known_modules:
-            return self
-        return None
 
-    def find_spec(self, fullname, path, target=None):
-        if fullname in self.known_modules:
-            return spec_from_loader(fullname, self)
-        return None
 
-    def __get_module(self, fullname):
-        try:
-            return self.known_modules[fullname]
-        except KeyError:
-            raise ImportError("This loader does not know module " + fullname)
 
-    def load_module(self, fullname):
-        try:
-            # in case of a reload
-            return sys.modules[fullname]
-        except KeyError:
-            pass
-        mod = self.__get_module(fullname)
-        if isinstance(mod, MovedModule):
-            mod = mod._resolve()
-        else:
-            mod.__loader__ = self
-        sys.modules[fullname] = mod
-        return mod
 
     def is_package(self, fullname):
         """
@@ -223,18 +191,15 @@ class _SixMetaPathImporter(object):
         We need this method to get correct spec objects with
         Python 3.4 (see PEP451)
         """
-        return hasattr(self.__get_module(fullname), "__path__")
+        pass
 
     def get_code(self, fullname):
         """Return None
 
         Required, if is_package is implemented"""
-        self.__get_module(fullname)  # eventually raises ImportError
-        return None
+        pass
     get_source = get_code  # same as get_code
 
-    def create_module(self, spec):
-        return self.load_module(spec.name)
 
     def exec_module(self, module):
         pass
@@ -509,18 +474,12 @@ _importer._add_module(Module_six_moves_urllib(__name__ + ".moves.urllib"),
 
 def add_move(move):
     """Add an item to six.moves."""
-    setattr(_MovedItems, move.name, move)
+    pass
 
 
 def remove_move(name):
     """Remove item from six.moves."""
-    try:
-        delattr(_MovedItems, name)
-    except AttributeError:
-        try:
-            del moves.__dict__[name]
-        except KeyError:
-            raise AttributeError("no such move, %r" % (name,))
+    pass
 
 
 if PY3:
@@ -557,24 +516,14 @@ except NameError:
 
 
 if PY3:
-    def get_unbound_function(unbound):
-        return unbound
 
     create_bound_method = types.MethodType
 
-    def create_unbound_method(func, cls):
-        return func
 
     Iterator = object
 else:
-    def get_unbound_function(unbound):
-        return unbound.im_func
 
-    def create_bound_method(func, obj):
-        return types.MethodType(func, obj, obj.__class__)
 
-    def create_unbound_method(func, cls):
-        return types.MethodType(func, None, cls)
 
     class Iterator(object):
 
@@ -595,17 +544,9 @@ get_function_globals = operator.attrgetter(_func_globals)
 
 
 if PY3:
-    def iterkeys(d, **kw):
-        return iter(d.keys(**kw))
 
-    def itervalues(d, **kw):
-        return iter(d.values(**kw))
 
-    def iteritems(d, **kw):
-        return iter(d.items(**kw))
 
-    def iterlists(d, **kw):
-        return iter(d.lists(**kw))
 
     viewkeys = operator.methodcaller("keys")
 
@@ -613,17 +554,9 @@ if PY3:
 
     viewitems = operator.methodcaller("items")
 else:
-    def iterkeys(d, **kw):
-        return d.iterkeys(**kw)
 
-    def itervalues(d, **kw):
-        return d.itervalues(**kw)
 
-    def iteritems(d, **kw):
-        return d.iteritems(**kw)
 
-    def iterlists(d, **kw):
-        return d.iterlists(**kw)
 
     viewkeys = operator.methodcaller("viewkeys")
 
@@ -640,11 +573,7 @@ _add_doc(iterlists,
 
 
 if PY3:
-    def b(s):
-        return s.encode("latin-1")
 
-    def u(s):
-        return s
     unichr = chr
     import struct
     int2byte = struct.Struct(">B").pack
@@ -666,20 +595,12 @@ if PY3:
         _assertRegex = "assertRegex"
         _assertNotRegex = "assertNotRegex"
 else:
-    def b(s):
-        return s
     # Workaround for standalone backslash
 
-    def u(s):
-        return unicode(s.replace(r'\\', r'\\\\'), "unicode_escape")
     unichr = unichr
     int2byte = chr
 
-    def byte2int(bs):
-        return ord(bs[0])
 
-    def indexbytes(buf, i):
-        return ord(buf[i])
     iterbytes = functools.partial(itertools.imap, ord)
     import StringIO
     StringIO = BytesIO = StringIO.StringIO
@@ -691,35 +612,17 @@ _add_doc(b, """Byte literal""")
 _add_doc(u, """Text literal""")
 
 
-def assertCountEqual(self, *args, **kwargs):
-    return getattr(self, _assertCountEqual)(*args, **kwargs)
 
 
-def assertRaisesRegex(self, *args, **kwargs):
-    return getattr(self, _assertRaisesRegex)(*args, **kwargs)
 
 
-def assertRegex(self, *args, **kwargs):
-    return getattr(self, _assertRegex)(*args, **kwargs)
 
 
-def assertNotRegex(self, *args, **kwargs):
-    return getattr(self, _assertNotRegex)(*args, **kwargs)
 
 
 if PY3:
     exec_ = getattr(moves.builtins, "exec")
 
-    def reraise(tp, value, tb=None):
-        try:
-            if value is None:
-                value = tp()
-            if value.__traceback__ is not tb:
-                raise value.with_traceback(tb)
-            raise value
-        finally:
-            value = None
-            tb = None
 
 else:
     def exec_(_code_, _globs_=None, _locs_=None):
@@ -758,66 +661,10 @@ print_ = getattr(moves.builtins, "print", None)
 if print_ is None:
     def print_(*args, **kwargs):
         """The new-style print function for Python 2.4 and 2.5."""
-        fp = kwargs.pop("file", sys.stdout)
-        if fp is None:
-            return
-
-        def write(data):
-            if not isinstance(data, basestring):
-                data = str(data)
-            # If the file has an encoding, encode unicode with it.
-            if (isinstance(fp, file) and
-                    isinstance(data, unicode) and
-                    fp.encoding is not None):
-                errors = getattr(fp, "errors", None)
-                if errors is None:
-                    errors = "strict"
-                data = data.encode(fp.encoding, errors)
-            fp.write(data)
-        want_unicode = False
-        sep = kwargs.pop("sep", None)
-        if sep is not None:
-            if isinstance(sep, unicode):
-                want_unicode = True
-            elif not isinstance(sep, str):
-                raise TypeError("sep must be None or a string")
-        end = kwargs.pop("end", None)
-        if end is not None:
-            if isinstance(end, unicode):
-                want_unicode = True
-            elif not isinstance(end, str):
-                raise TypeError("end must be None or a string")
-        if kwargs:
-            raise TypeError("invalid keyword arguments to print()")
-        if not want_unicode:
-            for arg in args:
-                if isinstance(arg, unicode):
-                    want_unicode = True
-                    break
-        if want_unicode:
-            newline = unicode("\n")
-            space = unicode(" ")
-        else:
-            newline = "\n"
-            space = " "
-        if sep is None:
-            sep = space
-        if end is None:
-            end = newline
-        for i, arg in enumerate(args):
-            if i:
-                write(sep)
-            write(arg)
-        write(end)
+        pass
 if sys.version_info[:2] < (3, 3):
     _print = print_
 
-    def print_(*args, **kwargs):
-        fp = kwargs.get("file", sys.stdout)
-        flush = kwargs.pop("flush", False)
-        _print(*args, **kwargs)
-        if flush and fp is not None:
-            fp.flush()
 
 _add_doc(reraise, """Reraise an exception.""")
 
@@ -827,20 +674,6 @@ if sys.version_info[0:2] < (3, 4):
     # attribute on ``wrapper`` object and it doesn't raise an error if any of
     # the attributes mentioned in ``assigned`` and ``updated`` are missing on
     # ``wrapped`` object.
-    def _update_wrapper(wrapper, wrapped,
-                        assigned=functools.WRAPPER_ASSIGNMENTS,
-                        updated=functools.WRAPPER_UPDATES):
-        for attr in assigned:
-            try:
-                value = getattr(wrapped, attr)
-            except AttributeError:
-                continue
-            else:
-                setattr(wrapper, attr, value)
-        for attr in updated:
-            getattr(wrapper, attr).update(getattr(wrapped, attr, {}))
-        wrapper.__wrapped__ = wrapped
-        return wrapper
     _update_wrapper.__doc__ = functools.update_wrapper.__doc__
 
     def wraps(wrapped, assigned=functools.WRAPPER_ASSIGNMENTS,
@@ -855,43 +688,11 @@ else:
 
 def with_metaclass(meta, *bases):
     """Create a base class with a metaclass."""
-    # This requires a bit of explanation: the basic idea is to make a dummy
-    # metaclass for one level of class instantiation that replaces itself with
-    # the actual metaclass.
-    class metaclass(type):
-
-        def __new__(cls, name, this_bases, d):
-            if sys.version_info[:2] >= (3, 7):
-                # This version introduced PEP 560 that requires a bit
-                # of extra care (we mimic what is done by __build_class__).
-                resolved_bases = types.resolve_bases(bases)
-                if resolved_bases is not bases:
-                    d['__orig_bases__'] = bases
-            else:
-                resolved_bases = bases
-            return meta(name, resolved_bases, d)
-
-        @classmethod
-        def __prepare__(cls, name, this_bases):
-            return meta.__prepare__(name, bases)
-    return type.__new__(metaclass, 'temporary_class', (), {})
+    pass
 
 
 def add_metaclass(metaclass):
     """Class decorator for creating a class with a metaclass."""
-    def wrapper(cls):
-        orig_vars = cls.__dict__.copy()
-        slots = orig_vars.get('__slots__')
-        if slots is not None:
-            if isinstance(slots, str):
-                slots = [slots]
-            for slots_var in slots:
-                orig_vars.pop(slots_var)
-        orig_vars.pop('__dict__', None)
-        orig_vars.pop('__weakref__', None)
-        if hasattr(cls, '__qualname__'):
-            orig_vars['__qualname__'] = cls.__qualname__
-        return metaclass(cls.__name__, cls.__bases__, orig_vars)
     return wrapper
 
 
@@ -906,11 +707,7 @@ def ensure_binary(s, encoding='utf-8', errors='strict'):
       - `str` -> encoded to `bytes`
       - `bytes` -> `bytes`
     """
-    if isinstance(s, binary_type):
-        return s
-    if isinstance(s, text_type):
-        return s.encode(encoding, errors)
-    raise TypeError("not expecting type '%s'" % type(s))
+    pass
 
 
 def ensure_str(s, encoding='utf-8', errors='strict'):
@@ -924,16 +721,7 @@ def ensure_str(s, encoding='utf-8', errors='strict'):
       - `str` -> `str`
       - `bytes` -> decoded to `str`
     """
-    # Optimization: Fast return for the common case.
-    if type(s) is str:
-        return s
-    if PY2 and isinstance(s, text_type):
-        return s.encode(encoding, errors)
-    elif PY3 and isinstance(s, binary_type):
-        return s.decode(encoding, errors)
-    elif not isinstance(s, (text_type, binary_type)):
-        raise TypeError("not expecting type '%s'" % type(s))
-    return s
+    pass
 
 
 def ensure_text(s, encoding='utf-8', errors='strict'):
@@ -947,12 +735,7 @@ def ensure_text(s, encoding='utf-8', errors='strict'):
       - `str` -> `str`
       - `bytes` -> decoded to `str`
     """
-    if isinstance(s, binary_type):
-        return s.decode(encoding, errors)
-    elif isinstance(s, text_type):
-        return s
-    else:
-        raise TypeError("not expecting type '%s'" % type(s))
+    pass
 
 
 def python_2_unicode_compatible(klass):
@@ -963,14 +746,7 @@ def python_2_unicode_compatible(klass):
     To support Python 2 and 3 with a single code base, define a __str__ method
     returning text and apply this decorator to the class.
     """
-    if PY2:
-        if '__str__' not in klass.__dict__:
-            raise ValueError("@python_2_unicode_compatible cannot be applied "
-                             "to %s because it doesn't define __str__()." %
-                             klass.__name__)
-        klass.__unicode__ = klass.__str__
-        klass.__str__ = lambda self: self.__unicode__().encode('utf-8')
-    return klass
+    pass
 
 
 # Complete the moves implementation.

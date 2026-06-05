@@ -19,27 +19,8 @@ s3_connect = boto3.client(
 cur = db.conn.cursor()
 
 
-def file_filtering(filename):
-    block_file_format = ["xlsx", "tsv", "json", "xml", "sql", "yaml", "ini", "jsonl"]
-    _format = filename.split(".")[-1]
-    _format = _format.lower()
-
-    if _format in block_file_format:
-        return True
-    else:
-        return False
 
 
-def upload_to_s3(file, bucket_name, filename):
-    try:
-        cur.execute("delete from cc_data")
-        db.conn.commit()
-        s3_connect.upload_fileobj(file, bucket_name, filename)
-        loader_display = "block"
-        return render_template("upload.html", loader_display=loader_display)
-    except Exception as e:
-        loader_display = "none"
-        return render_template("upload.html", loader_display=loader_display)
 
 
 def make_octdate():
@@ -124,23 +105,8 @@ def index():
     return render_template("index.html", result=result, date=date)
 
 
-@app.route("/upload")
-def upload():
-    return render_template("upload.html", loader_display="none")
 
 
-@app.route("/upload_to_s3", methods=["POST"])
-def upload_file():
-    file = request.files["file"]
-    filename = file.filename
-
-    if file_filtering(filename):
-        return "file format is not valid"
-
-    if not file:
-        return "file is not valid"
-
-    return upload_to_s3(file, s3.AWS_BUCKET_NAME, filename)
 
 
 if __name__ == "__main__":

@@ -26,10 +26,6 @@ def __deprecated_private_func(f):
            'it will be moved and or renamed in future versions.')
     msg = msg.format(name=f.__name__)
 
-    @wraps(f)
-    def deprecated_func(*args, **kwargs):
-        warnings.warn(msg, DeprecationWarning)
-        return f(*args, **kwargs)
 
     return deprecated_func
 

@@ -148,17 +148,13 @@ class tzwinbase(tzrangebase):
     @staticmethod
     def list():
         """Return a list of all time zones known to the system."""
-        with winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE) as handle:
-            with winreg.OpenKey(handle, TZKEYNAME) as tzkey:
-                result = [winreg.EnumKey(tzkey, i)
-                          for i in range(winreg.QueryInfoKey(tzkey)[0])]
-        return result
+        pass
 
     def display(self):
         """
         Return the display name of the time zone.
         """
-        return self._display
+        pass
 
     def transitions(self, year):
         """
@@ -194,9 +190,6 @@ class tzwinbase(tzrangebase):
     def _get_hasdst(self):
         return self._dstmonth != 0
 
-    @property
-    def _dst_base_offset(self):
-        return self._dst_base_offset_
 
 
 class tzwin(tzwinbase):

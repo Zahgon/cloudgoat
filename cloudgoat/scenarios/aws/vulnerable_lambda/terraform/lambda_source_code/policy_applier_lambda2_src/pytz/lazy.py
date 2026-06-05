@@ -93,18 +93,6 @@ class LazyList(list):
 
         fill_iter = [fill_iter]
 
-        def lazy(name):
-            def _lazy(self, *args, **kw):
-                _fill_lock.acquire()
-                try:
-                    if len(fill_iter) > 0:
-                        list.extend(self, fill_iter.pop())
-                        for method_name in cls._props:
-                            delattr(LazyList, method_name)
-                finally:
-                    _fill_lock.release()
-                return getattr(list, name)(self, *args, **kw)
-            return _lazy
 
         for name in cls._props:
             setattr(LazyList, name, lazy(name))
@@ -146,19 +134,6 @@ class LazySet(set):
 
         fill_iter = [fill_iter]
 
-        def lazy(name):
-            def _lazy(self, *args, **kw):
-                _fill_lock.acquire()
-                try:
-                    if len(fill_iter) > 0:
-                        for i in fill_iter.pop():
-                            set.add(self, i)
-                        for method_name in cls._props:
-                            delattr(LazySet, method_name)
-                finally:
-                    _fill_lock.release()
-                return getattr(set, name)(self, *args, **kw)
-            return _lazy
 
         for name in cls._props:
             setattr(LazySet, name, lazy(name))

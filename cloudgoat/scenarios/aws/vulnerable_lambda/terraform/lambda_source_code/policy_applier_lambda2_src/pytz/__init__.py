@@ -292,7 +292,7 @@ def _UTC():
     >>> utc is timezone('GMT')
     False
     """
-    return utc
+    pass
 
 
 _UTC.__safe_for_unpickling__ = True
@@ -304,7 +304,7 @@ def _p(*args):
     Just a wrapper around tzinfo.unpickler to save a few bytes in each pickle
     by shortening the path.
     """
-    return unpickler(*args)
+    pass
 
 
 _p.__safe_for_unpickling__ = True
@@ -488,18 +488,7 @@ def FixedOffset(offset, _tzinfos={}):
         >>> pickle.loads(pickle.dumps(two)) is two
         True
     """
-    if offset == 0:
-        return UTC
-
-    info = _tzinfos.get(offset)
-    if info is None:
-        # We haven't seen this one before. we need to save it.
-
-        # Use setdefault to avoid a race condition and make sure we have
-        # only one
-        info = _tzinfos.setdefault(offset, _FixedOffset(offset))
-
-    return info
+    pass
 
 
 FixedOffset.__safe_for_unpickling__ = True

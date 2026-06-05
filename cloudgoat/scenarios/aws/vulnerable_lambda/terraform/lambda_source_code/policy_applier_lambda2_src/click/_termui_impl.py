@@ -115,29 +115,9 @@ class ProgressBar(t.Generic[V]):
         # twice works and does "what you want".
         return next(iter(self))
 
-    def render_finish(self) -> None:
-        if self.is_hidden:
-            return
-        self.file.write(AFTER_BAR)
-        self.file.flush()
 
-    @property
-    def pct(self) -> float:
-        if self.finished:
-            return 1.0
-        return min(self.pos / (float(self.length or 1) or 1), 1.0)
 
-    @property
-    def time_per_iteration(self) -> float:
-        if not self.avg:
-            return 0.0
-        return sum(self.avg) / float(len(self.avg))
 
-    @property
-    def eta(self) -> float:
-        if self.length is not None and not self.finished:
-            return self.time_per_iteration * (self.length - self.pos)
-        return 0.0
 
     def format_eta(self) -> str:
         if self.eta_known:
@@ -302,43 +282,13 @@ class ProgressBar(t.Generic[V]):
             self.render_progress()
             self._completed_intervals = 0
 
-    def finish(self) -> None:
-        self.eta_known = False
-        self.current_item = None
-        self.finished = True
 
     def generator(self) -> t.Iterator[V]:
         """Return a generator which yields the items added to the bar
         during construction, and updates the progress bar *after* the
         yielded block returns.
         """
-        # WARNING: the iterator interface for `ProgressBar` relies on
-        # this and only works because this is a simple generator which
-        # doesn't create or manage additional state. If this function
-        # changes, the impact should be evaluated both against
-        # `iter(bar)` and `next(bar)`. `next()` in particular may call
-        # `self.generator()` repeatedly, and this must remain safe in
-        # order for that interface to work.
-        if not self.entered:
-            raise RuntimeError("You need to use progress bars in a with block.")
-
-        if self.is_hidden:
-            yield from self.iter
-        else:
-            for rv in self.iter:
-                self.current_item = rv
-
-                # This allows show_item_func to be updated before the
-                # item is processed. Only trigger at the beginning of
-                # the update interval.
-                if self._completed_intervals == 0:
-                    self.render_progress()
-
-                yield rv
-                self.update(1)
-
-            self.finish()
-            self.render_progress()
+        pass
 
 
 def pager(generator: t.Iterable[str], color: t.Optional[bool] = None) -> None:

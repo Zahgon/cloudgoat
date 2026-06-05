@@ -22,8 +22,6 @@ def pass_context(f: F) -> F:
     object as first argument.
     """
 
-    def new_func(*args, **kwargs):  # type: ignore
-        return f(get_current_context(), *args, **kwargs)
 
     return update_wrapper(t.cast(F, new_func), f)
 
@@ -34,8 +32,6 @@ def pass_obj(f: F) -> F:
     represents the state of a nested system.
     """
 
-    def new_func(*args, **kwargs):  # type: ignore
-        return f(get_current_context().obj, *args, **kwargs)
 
     return update_wrapper(t.cast(F, new_func), f)
 
@@ -66,22 +62,6 @@ def make_pass_decorator(
     """
 
     def decorator(f: F) -> F:
-        def new_func(*args, **kwargs):  # type: ignore
-            ctx = get_current_context()
-
-            if ensure:
-                obj = ctx.ensure_object(object_type)
-            else:
-                obj = ctx.find_object(object_type)
-
-            if obj is None:
-                raise RuntimeError(
-                    "Managed to invoke callback without a context"
-                    f" object of type {object_type.__name__!r}"
-                    " existing."
-                )
-
-            return ctx.invoke(f, obj, *args, **kwargs)
 
         return update_wrapper(t.cast(F, new_func), f)
 
@@ -102,23 +82,7 @@ def pass_meta_key(
 
     .. versionadded:: 8.0
     """
-
-    def decorator(f: F) -> F:
-        def new_func(*args, **kwargs):  # type: ignore
-            ctx = get_current_context()
-            obj = ctx.meta[key]
-            return ctx.invoke(f, obj, *args, **kwargs)
-
-        return update_wrapper(t.cast(F, new_func), f)
-
-    if doc_description is None:
-        doc_description = f"the {key!r} key from :attr:`click.Context.meta`"
-
-    decorator.__doc__ = (
-        f"Decorator that passes {doc_description} as the first argument"
-        " to the decorated function."
-    )
-    return decorator
+    pass
 
 
 def _make_command(

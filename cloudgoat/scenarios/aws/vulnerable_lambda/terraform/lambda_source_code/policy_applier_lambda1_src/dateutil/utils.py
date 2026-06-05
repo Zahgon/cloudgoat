@@ -21,9 +21,7 @@ def today(tzinfo=None):
         A :py:class:`datetime.datetime` object representing the current day
         at midnight.
     """
-
-    dt = datetime.now(tzinfo)
-    return datetime.combine(dt.date(), time(0, tzinfo=tzinfo))
+    pass
 
 
 def default_tzinfo(dt, tzinfo):
@@ -55,10 +53,7 @@ def default_tzinfo(dt, tzinfo):
     :return:
         Returns an aware :py:class:`datetime.datetime`.
     """
-    if dt.tzinfo is not None:
-        return dt
-    else:
-        return dt.replace(tzinfo=tzinfo)
+    pass
 
 
 def within_delta(dt1, dt2, delta):
@@ -66,6 +61,4 @@ def within_delta(dt1, dt2, delta):
     Useful for comparing two datetimes that may have a negligible difference
     to be considered equal.
     """
-    delta = abs(delta)
-    difference = dt1 - dt2
-    return -delta <= difference <= delta
+    pass

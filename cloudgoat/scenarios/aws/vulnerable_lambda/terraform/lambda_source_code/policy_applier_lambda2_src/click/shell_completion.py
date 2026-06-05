@@ -228,8 +228,7 @@ class ShellComplete:
         """The name of the shell function defined by the completion
         script.
         """
-        safe_name = re.sub(r"\W*", "", self.prog_name.replace("-", "_"), re.ASCII)
-        return f"_{safe_name}_completion"
+        pass
 
     def source_vars(self) -> t.Dict[str, t.Any]:
         """Vars for formatting :attr:`source_template`.
@@ -406,10 +405,7 @@ def add_completion_class(
     :param name: Name to register the class under. Defaults to the
         class's ``name`` attribute.
     """
-    if name is None:
-        name = cls.name
-
-    _available_shells[name] = cls
+    pass
 
 
 def get_completion_class(shell: str) -> t.Optional[t.Type[ShellComplete]]:

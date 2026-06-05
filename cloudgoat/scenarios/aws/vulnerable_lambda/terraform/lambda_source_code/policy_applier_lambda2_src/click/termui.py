@@ -50,10 +50,6 @@ _ansi_colors = {
 _ansi_reset_all = "\033[0m"
 
 
-def hidden_prompt_func(prompt: str) -> str:
-    import getpass
-
-    return getpass.getpass(prompt)
 
 
 def _build_prompt(

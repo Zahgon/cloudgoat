@@ -82,13 +82,7 @@ def _invalidates_cache(f):
     Decorator for rruleset methods which may invalidate the
     cached length.
     """
-    @wraps(f)
-    def inner_func(self, *args, **kwargs):
-        rv = f(self, *args, **kwargs)
-        self._invalidate_cache()
-        return rv
-
-    return inner_func
+    pass
 
 
 class rrulebase(object):
@@ -121,30 +115,6 @@ class rrulebase(object):
 
         self._len = None
 
-    def _iter_cached(self):
-        i = 0
-        gen = self._cache_gen
-        cache = self._cache
-        acquire = self._cache_lock.acquire
-        release = self._cache_lock.release
-        while gen:
-            if i == len(cache):
-                acquire()
-                if self._cache_complete:
-                    break
-                try:
-                    for j in range(10):
-                        cache.append(advance_iterator(gen))
-                except StopIteration:
-                    self._cache_gen = gen = None
-                    self._cache_complete = True
-                    break
-                release()
-            yield cache[i]
-            i += 1
-        while i < self._len:
-            yield cache[i]
-            i += 1
 
     def __getitem__(self, item):
         if self._cache_complete:
@@ -213,19 +183,7 @@ class rrulebase(object):
         """ Returns the first recurrence after the given datetime instance. The
             inc keyword defines what happens if dt is an occurrence. With
             inc=True, if dt itself is an occurrence, it will be returned.  """
-        if self._cache_complete:
-            gen = self._cache
-        else:
-            gen = self
-        if inc:
-            for i in gen:
-                if i >= dt:
-                    return i
-        else:
-            for i in gen:
-                if i > dt:
-                    return i
-        return None
+        pass
 
     def xafter(self, dt, count=None, inc=False):
         """
@@ -245,61 +203,14 @@ class rrulebase(object):
 
         :yields: Yields a sequence of `datetime` objects.
         """
-
-        if self._cache_complete:
-            gen = self._cache
-        else:
-            gen = self
-
-        # Select the comparison function
-        if inc:
-            comp = lambda dc, dtc: dc >= dtc
-        else:
-            comp = lambda dc, dtc: dc > dtc
-
-        # Generate dates
-        n = 0
-        for d in gen:
-            if comp(d, dt):
-                if count is not None:
-                    n += 1
-                    if n > count:
-                        break
-
-                yield d
+        pass
 
     def between(self, after, before, inc=False, count=1):
         """ Returns all the occurrences of the rrule between after and before.
         The inc keyword defines what happens if after and/or before are
         themselves occurrences. With inc=True, they will be included in the
         list, if they are found in the recurrence set. """
-        if self._cache_complete:
-            gen = self._cache
-        else:
-            gen = self
-        started = False
-        l = []
-        if inc:
-            for i in gen:
-                if i > before:
-                    break
-                elif not started:
-                    if i >= after:
-                        started = True
-                        l.append(i)
-                else:
-                    l.append(i)
-        else:
-            for i in gen:
-                if i >= before:
-                    break
-                elif not started:
-                    if i > after:
-                        started = True
-                        l.append(i)
-                else:
-                    l.append(i)
-        return l
+        pass
 
 
 class rrule(rrulebase):
@@ -1250,58 +1161,12 @@ class _iterinfo(object):
         self.lastyear = year
         self.lastmonth = month
 
-    def ydayset(self, year, month, day):
-        return list(range(self.yearlen)), 0, self.yearlen
 
-    def mdayset(self, year, month, day):
-        dset = [None]*self.yearlen
-        start, end = self.mrange[month-1:month+1]
-        for i in range(start, end):
-            dset[i] = i
-        return dset, start, end
 
-    def wdayset(self, year, month, day):
-        # We need to handle cross-year weeks here.
-        dset = [None]*(self.yearlen+7)
-        i = datetime.date(year, month, day).toordinal()-self.yearordinal
-        start = i
-        for j in range(7):
-            dset[i] = i
-            i += 1
-            # if (not (0 <= i < self.yearlen) or
-            #    self.wdaymask[i] == self.rrule._wkst):
-            # This will cross the year boundary, if necessary.
-            if self.wdaymask[i] == self.rrule._wkst:
-                break
-        return dset, start, i
 
-    def ddayset(self, year, month, day):
-        dset = [None] * self.yearlen
-        i = datetime.date(year, month, day).toordinal() - self.yearordinal
-        dset[i] = i
-        return dset, i, i + 1
 
-    def htimeset(self, hour, minute, second):
-        tset = []
-        rr = self.rrule
-        for minute in rr._byminute:
-            for second in rr._bysecond:
-                tset.append(datetime.time(hour, minute, second,
-                                          tzinfo=rr._tzinfo))
-        tset.sort()
-        return tset
 
-    def mtimeset(self, hour, minute, second):
-        tset = []
-        rr = self.rrule
-        for second in rr._bysecond:
-            tset.append(datetime.time(hour, minute, second, tzinfo=rr._tzinfo))
-        tset.sort()
-        return tset
 
-    def stimeset(self, hour, minute, second):
-        return (datetime.time(hour, minute, second,
-                tzinfo=self.rrule._tzinfo),)
 
 
 class rruleset(rrulebase):
@@ -1471,11 +1336,7 @@ class _rrulestr(object):
     _weekday_map = {"MO": 0, "TU": 1, "WE": 2, "TH": 3,
                     "FR": 4, "SA": 5, "SU": 6}
 
-    def _handle_int(self, rrkwargs, name, value, **kwargs):
-        rrkwargs[name.lower()] = int(value)
 
-    def _handle_int_list(self, rrkwargs, name, value, **kwargs):
-        rrkwargs[name.lower()] = [int(x) for x in value.split(',')]
 
     _handle_INTERVAL = _handle_int
     _handle_COUNT = _handle_int
@@ -1489,48 +1350,14 @@ class _rrulestr(object):
     _handle_BYMINUTE = _handle_int_list
     _handle_BYSECOND = _handle_int_list
 
-    def _handle_FREQ(self, rrkwargs, name, value, **kwargs):
-        rrkwargs["freq"] = self._freq_map[value]
 
-    def _handle_UNTIL(self, rrkwargs, name, value, **kwargs):
-        global parser
-        if not parser:
-            from dateutil import parser
-        try:
-            rrkwargs["until"] = parser.parse(value,
-                                             ignoretz=kwargs.get("ignoretz"),
-                                             tzinfos=kwargs.get("tzinfos"))
-        except ValueError:
-            raise ValueError("invalid until date")
 
-    def _handle_WKST(self, rrkwargs, name, value, **kwargs):
-        rrkwargs["wkst"] = self._weekday_map[value]
 
     def _handle_BYWEEKDAY(self, rrkwargs, name, value, **kwargs):
         """
         Two ways to specify this: +1MO or MO(+1)
         """
-        l = []
-        for wday in value.split(','):
-            if '(' in wday:
-                # If it's of the form TH(+1), etc.
-                splt = wday.split('(')
-                w = splt[0]
-                n = int(splt[1][:-1])
-            elif len(wday):
-                # If it's of the form +1MO
-                for i in range(len(wday)):
-                    if wday[i] not in '+-0123456789':
-                        break
-                n = wday[:i] or None
-                w = wday[i:]
-                if n:
-                    n = int(n)
-            else:
-                raise ValueError("Invalid (empty) BYDAY specification.")
-
-            l.append(weekdays[self._weekday_map[w]](n))
-        rrkwargs["byweekday"] = l
+        pass
 
     _handle_BYDAY = _handle_BYWEEKDAY
 
